@@ -62,36 +62,33 @@ export default function Home() {
         <div className="hero-grid-bg" />
         <div className="hero-content">
           <div className="hero-badge">
-            <Zap size={14} />
-            <span>Быстрая выдача</span>
+            <Zap size={12} />
+            <span>Выдача за 15 минут</span>
           </div>
           <h1 className="hero-title">
-            Геймпассы для <span className="hero-gradient">Roblox</span>
-            <br />по лучшим ценам
+            Геймпассы<br /><span className="hero-gradient">дешевле</span> чем везде
           </h1>
           <p className="hero-subtitle">
-            Выбирай игру, добавляй в корзину и получай геймпасс за 15 минут.
-            Безопасно, быстро и выгодно.
+            Выбери игру, добавь в корзину, оплати. Менеджер выдаст геймпасс в течение 15 минут.
           </p>
           <div className="hero-actions">
             <button className="hero-btn-primary" onClick={() => catalogRef.current?.scrollIntoView({ behavior: 'smooth' })}>
-              <Gamepad2 size={18} />
               <span>Выбрать игру</span>
               <ArrowRight size={16} />
             </button>
           </div>
           <div className="hero-features">
             <div className="hero-feature">
-              <Shield size={16} />
-              <span>100% безопасно</span>
+              <Shield size={14} />
+              <span>Безопасно</span>
             </div>
             <div className="hero-feature">
-              <Clock size={16} />
-              <span>Выдача 15 мин</span>
+              <Clock size={14} />
+              <span>15 минут</span>
             </div>
             <div className="hero-feature">
-              <Zap size={16} />
-              <span>Лучшие цены</span>
+              <Users size={14} />
+              <span>1000+ клиентов</span>
             </div>
           </div>
         </div>
@@ -231,12 +228,11 @@ export default function Home() {
         <div className="cta-container">
           <div className="cta-glow" />
           <div className="cta-content">
-            <Gamepad2 size={40} className="cta-icon" />
-            <h2 className="cta-title">Готов получить геймпасс?</h2>
-            <p className="cta-text">Выбери игру из каталога и оформи заказ за пару минут</p>
+            <h2 className="cta-title">Готов начать?</h2>
+            <p className="cta-text">Выбери игру и получи геймпасс уже сегодня</p>
             <button className="cta-btn" onClick={() => catalogRef.current?.scrollIntoView({ behavior: 'smooth' })}>
               <span>Перейти к каталогу</span>
-              <ArrowRight size={18} />
+              <ArrowRight size={16} />
             </button>
           </div>
         </div>
