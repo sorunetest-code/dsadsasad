@@ -185,32 +185,30 @@ export default function Home() {
                       <p>Геймпассы для этой игры скоро добавят</p>
                     </div>
                   ) : (
-                    <div className="passes-grid">
+                    <div className="passes-list">
                       {game.passes.map((pass) => {
                         const inCart = hasItem(game._id, pass._id);
                         return (
-                          <div key={pass._id} className={`pass-card ${inCart ? 'in-cart' : ''}`}>
-                            <div className="pass-card-img">
+                          <div key={pass._id} className={`pass-row ${inCart ? 'in-cart' : ''}`}>
+                            <div className="pass-row-img">
                               {pass.imageUrl ? (
                                 <img src={pass.imageUrl} alt={pass.name} />
                               ) : (
-                                <span className="pass-card-emoji">{pass.emoji || '⭐'}</span>
+                                <span className="pass-row-emoji">{pass.emoji || '⭐'}</span>
                               )}
                             </div>
-                            <div className="pass-card-content">
-                              <h4 className="pass-card-name">{pass.name}</h4>
-                              {pass.desc && <p className="pass-card-desc">{pass.desc}</p>}
-                              <div className="pass-card-footer">
-                                <span className="pass-card-price">{pass.price} ₽</span>
-                                <button
-                                  className={`pass-card-btn ${inCart ? 'added' : ''}`}
-                                  onClick={() => handleAdd(game, pass)}
-                                  disabled={inCart}
-                                >
-                                  {inCart ? 'В корзине' : 'Добавить'}
-                                </button>
-                              </div>
+                            <div className="pass-row-info">
+                              <h4 className="pass-row-name">{pass.name}</h4>
+                              {pass.desc && <p className="pass-row-desc">{pass.desc}</p>}
                             </div>
+                            <div className="pass-row-price">{pass.price} ₽</div>
+                            <button
+                              className={`pass-row-btn ${inCart ? 'added' : ''}`}
+                              onClick={() => handleAdd(game, pass)}
+                              disabled={inCart}
+                            >
+                              {inCart ? 'В корзине' : 'Добавить'}
+                            </button>
                           </div>
                         );
                       })}

@@ -12,7 +12,8 @@ function formatPlayers(n) {
 
 const SL = { new: 'Новый', active: 'В работе', done: 'Готово' };
 const SC = { new: 's-new', active: 's-active', done: 's-done' };
-const TABS = ['Заказы', 'Каталог'];
+const TABS = ['Заказы', 'Каталог', 'Настройки'];
+const DEFAULT_ROBUX_RATE = 0.6;
 const FILTERS = ['Все', 'Новый', 'В работе', 'Готово'];
 
 function Modal({ title, onClose, children }) {
@@ -174,7 +175,7 @@ function GameForm({ initial = {}, onSave, onClose }) {
   );
 }
 
-function PassForm({ initial = {}, onSave, onClose }) {
+function PassForm({ initial = {}, onSave, onClose, robuxRate }) {
   const [gamepassId, setGamepassId] = useState(initial.gamepassId || '');
   const [price, setPrice] = useState(initial.price || '');
   const [loading, setLoading] = useState(false);
@@ -199,6 +200,10 @@ function PassForm({ initial = {}, onSave, onClose }) {
         description: data.description,
         robuxPrice: data.price
       });
+      if (data.price && robuxRate) {
+        const autoPrice = Math.round(data.price * robuxRate);
+        setPrice(String(autoPrice));
+      }
     } catch (e) {
       setError(e.message || 'Не удалось загрузить');
     } finally {
@@ -292,7 +297,7 @@ function PassForm({ initial = {}, onSave, onClose }) {
   );
 }
 
-function CatalogTab() {
+function CatalogTab({ robuxRate }) {
   const [games, setGames] = useState([]);
   const [onlineData, setOnlineData] = useState({});
   const [exp, setExp] = useState({});
@@ -410,7 +415,7 @@ function CatalogTab() {
       )}
       {modal?.type === 'pass' && (
         <Modal title={modal.passId ? 'Редактировать геймпасс' : 'Новый геймпасс'} onClose={() => setModal(null)}>
-          <PassForm initial={modal.initial} onSave={savePass} onClose={() => setModal(null)} />
+          <PassForm initial={modal.initial} onSave={savePass} onClose={() => setModal(null)} robuxRate={robuxRate} />
         </Modal>
       )}
     </div>
@@ -550,8 +555,63 @@ function OrdersTab() {
   );
 }
 
+function SettingsTab({ robuxRate, setRobuxRate }) {
+  const [inputRate, setInputRate] = useState(String(robuxRate));
+
+  const handleSave = () => {
+    const val = parseFloat(inputRate);
+    if (!isNaN(val) && val > 0) {
+      setRobuxRate(val);
+      localStorage.setItem('rbxmarket_robux_rate', String(val));
+    }
+  };
+
+  return (
+    <div style={{ padding: 32, maxWidth: 600 }}>
+      <h2 style={{ fontFamily: 'var(--f-display)', fontSize: 24, fontWeight: 700, marginBottom: 8 }}>Настройки</h2>
+      <p style={{ color: 'var(--white2)', fontSize: 14, marginBottom: 32 }}>Настройки конвертации и расчётов</p>
+
+      <div style={{ background: 'var(--black2)', border: '1px solid var(--line)', borderRadius: 12, padding: 24 }}>
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ display: 'block', fontSize: 11, color: 'var(--white3)', fontFamily: 'var(--f-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>
+            Курс конвертации (Robux в рубли)
+          </label>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <input
+              type="number"
+              step="0.01"
+              value={inputRate}
+              onChange={e => setInputRate(e.target.value)}
+              style={{ flex: 1, background: 'var(--black3)', border: '1px solid var(--line)', borderRadius: 8, padding: '12px 16px', fontSize: 15, color: 'var(--white)', outline: 'none', fontFamily: 'var(--f-mono)' }}
+            />
+            <button className="btn-sm accent" onClick={handleSave} style={{ padding: '12px 24px' }}>
+              Сохранить
+            </button>
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--white3)', marginTop: 8 }}>
+            Пример: 1000 R$ × {robuxRate} = {Math.round(1000 * robuxRate)} ₽
+          </p>
+        </div>
+
+        <div style={{ borderTop: '1px solid var(--line)', paddingTop: 16, marginTop: 16 }}>
+          <div style={{ fontSize: 13, color: 'var(--white2)', marginBottom: 8 }}>Как это работает:</div>
+          <ul style={{ fontSize: 12, color: 'var(--white3)', paddingLeft: 20, lineHeight: 1.8 }}>
+            <li>При импорте геймпасса цена автоматически рассчитывается</li>
+            <li>Формула: Robux цена × {robuxRate} = цена в рублях</li>
+            <li>Вы всегда можете изменить цену вручную</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [tab, setTab] = useState(0);
+  const [robuxRate, setRobuxRate] = useState(() => {
+    const saved = localStorage.getItem('rbxmarket_robux_rate');
+    return saved ? parseFloat(saved) : DEFAULT_ROBUX_RATE;
+  });
 
   return (
     <div className="dash" style={{ display: 'flex', flexDirection: 'column' }}>
@@ -563,12 +623,15 @@ export default function Dashboard() {
         {TABS.map((t, i) => (
           <button key={t} className={`dash-tab ${tab === i ? 'active' : ''}`} onClick={() => setTab(i)}>{t}</button>
         ))}
+        <div style={{ marginLeft: 'auto', padding: '0 16px', fontSize: 11, color: 'var(--white3)', fontFamily: 'var(--f-mono)' }}>
+          Курс: {robuxRate}
+        </div>
       </div>
 
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        {tab === 0 ? <OrdersTab /> : (
-          <div style={{ overflowY: 'auto', flex: 1 }}><CatalogTab /></div>
-        )}
+        {tab === 0 && <OrdersTab />}
+        {tab === 1 && <div style={{ overflowY: 'auto', flex: 1 }}><CatalogTab robuxRate={robuxRate} /></div>}
+        {tab === 2 && <div style={{ overflowY: 'auto', flex: 1 }}><SettingsTab robuxRate={robuxRate} setRobuxRate={setRobuxRate} /></div>}
       </div>
     </div>
   );

@@ -175,6 +175,55 @@ router.get('/games-online', async (req, res) => {
   res.json(result);
 });
 
+router.post('/users-avatars', async (req, res) => {
+  const { usernames } = req.body;
+  if (!usernames || !Array.isArray(usernames)) return res.status(400).json({ error: 'usernames array required' });
+
+  const result = {};
+  const toFetch = [];
+
+  for (const username of usernames) {
+    const cacheKey = `avatar_${username.toLowerCase()}`;
+    const cached = getCached(cacheKey);
+    if (cached !== null) {
+      result[username] = cached;
+    } else {
+      toFetch.push(username);
+    }
+  }
+
+  if (toFetch.length > 0) {
+    try {
+      const usersRes = await axios.post(
+        'https://users.roblox.com/v1/usernames/users',
+        { usernames: toFetch, excludeBannedUsers: false },
+        { timeout: 6000 }
+      );
+      const users = usersRes.data?.data || [];
+      const userIds = users.map(u => u.id);
+
+      if (userIds.length > 0) {
+        const avatarRes = await axios.get(
+          `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userIds.join(',')}&size=150x150&format=Png&isCircular=false`,
+          { timeout: 5000 }
+        );
+        const avatars = avatarRes.data?.data || [];
+
+        for (const user of users) {
+          const avatar = avatars.find(a => a.targetId === user.id);
+          const avatarUrl = avatar?.imageUrl || null;
+          result[user.name] = avatarUrl;
+          setCache(`avatar_${user.name.toLowerCase()}`, avatarUrl);
+        }
+      }
+    } catch (err) {
+      console.error('Roblox users-avatars API error:', err.message);
+    }
+  }
+
+  res.json(result);
+});
+
 router.get('/gamepass/:gamepassId', async (req, res) => {
   const { gamepassId } = req.params;
   if (!gamepassId) return res.status(400).json({ error: 'gamepassId required' });
